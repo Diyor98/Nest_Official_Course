@@ -1,10 +1,12 @@
-import { Injectable, Module } from '@nestjs/common';
+import { Injectable, Module, Scope } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Event } from 'src/events/entities/event.entity';
 import { Connection } from 'typeorm';
 import { COFFEE_BRANDS } from './coffees.constants';
 import { CoffeesController } from './coffees.controller';
 import { CoffeesService } from './coffees.service';
+import coffeesConfig from './config/coffees.config';
 import { Coffee } from './entities/coffee.entity';
 import { Flavor } from './entities/flavor.entity';
 
@@ -13,22 +15,19 @@ class MockCoffeeService {} // used as an example for useValue
 
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Coffee, Flavor, Event])],
+    imports: [TypeOrmModule.forFeature([Coffee, Flavor, Event]), ConfigModule.forFeature(coffeesConfig)],
     controllers: [CoffeesController],
     providers: [CoffeesService,
                 
-        { provide: COFFEE_BRANDS, useFactory: async (connection: Connection): Promise<string[]> =>  {
-            // const coffeeBrands = await connection.query('SELECT * ...');
-            const coffeeBrands = await Promise.resolve(['buddy brew', 'nescafe', 'hello']);
-            console.log('Hello instantiation');
-            return coffeeBrands;
-        },}],
+        { provide: COFFEE_BRANDS, useFactory: () => ['buddy brew', 'nescafe', 'hello'], scope: Scope.TRANSIENT}],
     exports: [CoffeesService]
 })
 export class CoffeesModule {}
 
 
 // { provide: COFFEE_BRANDS, useValue: ['buddy brew', 'nescafe']}
+
+// useFactory uses functions to pass valuee to provder (functions can be async)
 
 /*
     { provide: <ClassName>, useClass: <ClassName>}
